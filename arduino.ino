@@ -1,14 +1,14 @@
 /*************************************************************************************
 
-  Mark Bramwell, July 2010
-  Modified by Jose Berengueres 4th Feb  2015
+  (cc) Jose Berengueres 4-8th Feb  2015, Dubai
+  (LCD sample code by Mark Bramwell, July 2010)
   
-  This is used for regata starts
+  This is an aRduino Ollie box used for regata starts
   
-  DF ROBOT LCD PANEL WIHT RELAY Module v3.2
-  connect the relay of the horn to D0 of LCD shield
-  connect the relay that controls buzzer to another digital output TBA 
-  Plug the LCD Keypad to the UNO (or other controller)
+  Components: 
+  DF ROBOT LCD PANEL, 2 x RELAY Module v3.2, 1 x Arduino 
+  connect the relay of the horn to D2 of LCD shield. This relay drives aircompressor (12VDC battery)
+  connect the relay that controls buzzer/beeper to D11. 
 
 **************************************************************************************/
 
@@ -27,7 +27,8 @@ int adc_key_in  = 0;
 #define btnSELECT 4
 #define btnNONE   5
 
-#define RELAY_PIN   0  // horn
+#define RELAY_HORN   2   // horn relay
+#define RELAY_BEEP   11  // beeper 
 #define STD_DELAY 300
 
 #define SHORT_BEEP_LENGTH 500
@@ -44,16 +45,19 @@ unsigned long  *sch;
 int *h_or_b;
 int index;
 
+// Short seq countdown
 unsigned long  sch_3[] =   { 0, 1 ,2, 3, 4, 5, 10, 19, 20, 28, 29, 30, 1*60, 2*60, 2*60+58, 2*60+59, 3*60, 3*60+1, 3*60+2, 3*60+3  };
 int h_or_b3[] =            { 0, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,  1,    0,    0,       0,       0,    0,      1,      1,      1  };
 int index_3 = 19;
 
 
-
+// SLong seq countdown
 unsigned long  sch_5[] =   { 0, 1 ,2, 3, 4, 5, 10, 19, 20, 28, 29, 30, 1*60, 4*60, 4*60+56, 4*60+57, 4*60+58, 4*60+59, 5*60, 5*60+1, 5*60+2, 5*60+3, 5*60+4, 5*60+5  };
 int h_or_b5[] =            { 0, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,  1,    0,    0,       0,       0,       0,     0,    0,      1,      1,      1,      1,      1    };
 int index_5 = 23;
+
 bool sound_on = false;
+
 int read_LCD_buttons(){               // read the buttons
     adc_key_in = analogRead(0);       // read the value from the sensor 
 
@@ -63,7 +67,7 @@ int read_LCD_buttons(){               // read the buttons
 
     if (adc_key_in > 1000) return btnNONE; 
 
-    // For V1.1 us this threshold
+    // For V1.1 use this threshold
     if (adc_key_in < 50)   return btnRIGHT;  
     if (adc_key_in < 250)  return btnUP; 
     if (adc_key_in < 450)  return btnDOWN; 
@@ -82,6 +86,7 @@ int read_LCD_buttons(){               // read the buttons
     return btnNONE;                // when all others fail, return this.
 }
 
+// utility to print on LCD
 void lcd_w(char a[16],char b[16]) {
     lcd.setCursor(0,0);
     lcd.print("                 ");
@@ -98,13 +103,13 @@ void lcd_w(char a[16],char b[16]) {
 }
 
 void mymenu(){
-    lcd_w("OLLIE BOX v 2.0 ","BY J BERENGUERES");
+    lcd_w("OLLIE BOX v 2.1 ","BY J BERENGUERES");
     lcd_w("  INSTRUCTIONS  ","                ");
     lcd_w(" 'LEFT' --> BUZZ","'RIGHT' --> HORN");
     lcd_w("TO STOP SEQUENCE","  --> 'SELECT'  ");
     lcd_w(" PRESS 'UP'-->5m","     'DOWN'-->3m");
 }
-
+/*
 void vibrate(int n,int b, int c) {
   for(int i=0;i<n;i++){
     digitalWrite(RELAY_PIN, HIGH);
@@ -114,18 +119,22 @@ void vibrate(int n,int b, int c) {
     
   }
 }
+*/
 
 void setup(){
-   pinMode(RELAY_PIN, OUTPUT); 
-   lcd.begin(16, 2);               // start the library
-   lcd.setCursor(0,0);             // set the LCD cursor   position 
+   pinMode(RELAY_HORN, OUTPUT);
+   pinMode(RELAY_BEEP, OUTPUT);
+   lcd.begin(16, 2);
+   lcd.setCursor(0,0);
    mymenu();
    lcd.setCursor(0,1);            
    lcd.print("00:00 ");
 }
 
 void activate_sound(int a) {
-      digitalWrite(RELAY_PIN, HIGH);
+      int what_beep = RELAY_HORN;
+      if (a==1) { what_beep = RELAY_BEEP;}
+      digitalWrite(what_beep, HIGH);
       sound_start = millis();
       lcd.setCursor(7,1);
       if (a==0)  {    
@@ -137,7 +146,9 @@ void activate_sound(int a) {
 }
 
 void de_activate_sound(int a) {
-      digitalWrite(RELAY_PIN, LOW);
+      int what_beep = RELAY_HORN;
+      if (a==1) { what_beep = RELAY_BEEP;}
+      digitalWrite(what_beep, LOW);
       lcd.setCursor(7,1);
       lcd.print("        ");
 }
@@ -196,32 +207,34 @@ void loop(){
    
    lcd_key = read_LCD_buttons();   // read the buttons
    delay(50);
-
    switch (lcd_key){               // depending on which button was pushed, we perform an action
        
        
        case btnRIGHT:{             //  push button "RIGHT" and show the word on the screen
-            digitalWrite(RELAY_PIN, HIGH);
+            //mode = btnRIGHT;
+            digitalWrite(RELAY_HORN, HIGH);
             lcd.setCursor(7,1);
             lcd.print("H");
             delay(SHORT_BEEP_LENGTH);
-            digitalWrite(RELAY_PIN, LOW);
-            lcd.setCursor(7,1);
-            lcd.print("             ");
+            digitalWrite(RELAY_HORN, LOW);
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
             
             break;
        }
        case btnLEFT:{
-            digitalWrite(RELAY_PIN, HIGH);
+            //mode = btnLEFT;
+            digitalWrite(RELAY_BEEP, HIGH);
             lcd.setCursor(7,1);
             lcd.print("B");
             delay(SHORT_BEEP_LENGTH);
-            digitalWrite(RELAY_PIN, LOW);
-            lcd.setCursor(7,1);
-            lcd.print("                ");
+            digitalWrite(RELAY_BEEP, LOW);
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
              break;
        }    
        case btnUP:{
+             mode = btnUP;
              lcd_w(" ...STARTING... ","FIVE MINUTE SEQ ");
              lcd.setCursor(0,0);
              lcd.print("FIVE MINUTE SEQ ");  //  push button "DOWN" and show the word on the screen
@@ -240,6 +253,7 @@ void loop(){
              break;
        }
        case btnDOWN:{
+             mode = btnDOWN;
              lcd_w(" ...STARTING... ","THREE MINUTE SEQ");
              lcd.setCursor(0,0);
              lcd.print("THREE MINUTE SEQ");  //  push button "DOWN" and show the word on the screen
@@ -258,11 +272,17 @@ void loop(){
              break;
        }
        case btnSELECT:{
-               mode = btnSELECT;
-               lcd.setCursor(7,1);
-               lcd.print("CANCELLED"); 
-               digitalWrite(RELAY_PIN, LOW);
-               break;
+             if ( mode != btnSELECT ) { 
+                  mode = btnSELECT;
+                  lcd.setCursor(7,1);
+                  lcd.print("CANCELLED"); 
+                  digitalWrite(RELAY_HORN, LOW);
+                  digitalWrite(RELAY_BEEP, LOW);
+                  delay(1000);
+             }else{ 
+                  mymenu();
+             }
+             break;
        }
        
        case btnNONE:{
