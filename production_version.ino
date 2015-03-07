@@ -1,4 +1,3 @@
-//CREATIVE COMONS NC AT CC
 /*************************************************************************************
 
   (cc) Jose Berengueres 4-8th Feb  2015, Dubai
@@ -10,8 +9,6 @@
   DF ROBOT LCD PANEL, 2 x RELAY Module v3.2, 1 x Arduino 
   connect the relay of the horn to D2 of LCD shield. This relay drives aircompressor (12VDC battery)
   connect the relay that controls buzzer/beeper to D11. 
-  LCD SELECT BUTTON: SELECTS 3 or 5 minute sequence.
-  LCD LEFT BUTTON : START STOP TOGGLE.
 
 **************************************************************************************/
 
@@ -24,6 +21,7 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);           // select the pins used on the LC
 int lcd_key     = 0;
 int adc_key_in  = 0;
 
+#define NUM_SEQ  3
 #define btnRIGHT  0
 #define btnUP     1
 #define btnDOWN   2
@@ -48,7 +46,7 @@ bool my_start = false;
 unsigned long  len_of_note[] = {500,400,800,1500}; // in ms
 
 int prev_s;
-
+int t;
 int prev_mode = 5;
 int mode = 5;
 long start;
@@ -100,6 +98,23 @@ int h_or_b5[] =            {   3,    0,0,0,0,0,
                                2,0, 0, 0, 0, 0,1,1,1,1,1,0, 0, 0, 0, 0, 0, 0, 0, 0, 0  };
 int index_5 = 28+6+5-1; // 
 int ctdwn_5 = 5*60 + 25; // 9; //
+
+
+//************************************* FIVE BRITISH MIN SEQ ********************************
+unsigned long sch_5british[] =   {    0, 10,             20,       30, 
+
+                                  1*600, 1*600+10, 1*600+20, 1*600+30, 
+                            
+                                  4*600, 4*600+10, 4*600+20, 4*600+30, 
+                          
+                                  5*600,5*600+10,5*600+20,   5*600+30  };
+
+int h_or_b5british[] =            {  3, 0,0,0,
+                                     2, 0,0,0,
+                                     2, 0,0,0,
+                                     2, 0,0,0 };
+int index_5british = 4*4-1; // 
+int ctdwn_5british = 5*60 + 6; //
 
 bool sound_on = false;
 
@@ -164,6 +179,7 @@ void vibrate(int n,int b, int c) {
 */
 
 void setup(){
+   t =0;
    Serial.begin(9600);
    Serial.println("hello");
    pinMode(RELAY_HORN, OUTPUT);
@@ -173,7 +189,6 @@ void setup(){
    mymenu();
    lcd.setCursor(0,1);            
    lcd.print("00:00 ");
-   
     
 }
 
@@ -265,18 +280,26 @@ void loop(){
        case btnLEFT:{
           my_start = !my_start;
           if (my_start) {
-             if (toggle){
+             if (t==0){
                lcd_w(" ...STARTING... ","FIVE MINUTE SEQ ");
                ctdwn = ctdwn_5 ; 
                sch = sch_5;
                h_or_b = h_or_b5;
                index = index_5;
-             }else{
+             }
+             if(t==1){
                lcd_w(" ...STARTING... ","THREE MINUTE SEQ");
                ctdwn = ctdwn_3;
                sch = sch_3;
                h_or_b = h_or_b3;
                index = index_3;
+             }
+             if (t==2) {
+               lcd_w(" ...STARTING... ","BRITISH 5MIN SEQ");
+               ctdwn = ctdwn_5british;
+               sch = sch_5british;
+               h_or_b = h_or_b5british;
+               index = index_5british;
              }
              lcd.setCursor(0,1);            
              lcd.print("00:00                        ");
@@ -298,18 +321,14 @@ void loop(){
  
        case btnSELECT:{
          if (!my_start) {
-             toggle = !toggle;
-             if ( toggle ) {
-                 lcd.setCursor(0,0);              
-                 lcd.print("FIVE MIN. START      "); 
-                 lcd.setCursor(0,1);              
-                 lcd.print("                        "); 
-             }else{
-                 lcd.setCursor(0,0);              
-                 lcd.print("THREE MIN. START     "); 
-                 lcd.setCursor(0,1);              
-                 lcd.print("                        "); 
-             }
+             t = t + 1;
+             if (t>(NUM_SEQ-1)) {t= 0;}
+             lcd.setCursor(0,0);              
+             if ( t == 0 ) {     lcd.print("FIVE  MIN. START      "); }
+             if ( t == 1 ) {     lcd.print("THREE MIN. START     "); }
+             if ( t == 2 ) {     lcd.print("BRITISH (5)START     "); }
+             lcd.setCursor(0,1);              
+             lcd.print("                       "); 
              delay(400);
              break;
          }
@@ -320,4 +339,3 @@ void loop(){
        }
    }
 }
-
