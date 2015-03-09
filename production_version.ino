@@ -109,12 +109,12 @@ unsigned long sch_5british[] =   {    0, 10,             20,       30,
                           
                                   5*600,5*600+10,5*600+20,   5*600+30  };
 
-int h_or_b5british[] =            {  3, 0,0,0,
-                                     2, 0,0,0,
-                                     2, 0,0,0,
-                                     2, 0,0,0 };
-int index_5british = 4*4-1; // 
-int ctdwn_5british = 5*60 + 6; //
+int h_or_b5british[] =            {  3, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0 };
+int index_5british = 4*6-1 ; // 
+int ctdwn_5british = 5*60 + 8; //
 
 bool sound_on = false;
 
@@ -281,21 +281,21 @@ void loop(){
           my_start = !my_start;
           if (my_start) {
              if (t==0){
-               lcd_w(" ...STARTING... ","FIVE MINUTE SEQ ");
+               lcd_w(" ...STARTING... ","US FIVE MIN SEQ ");
                ctdwn = ctdwn_5 ; 
                sch = sch_5;
                h_or_b = h_or_b5;
                index = index_5;
              }
              if(t==1){
-               lcd_w(" ...STARTING... ","THREE MINUTE SEQ");
+               lcd_w(" ...STARTING... ","US THREE MIN SEQ");
                ctdwn = ctdwn_3;
                sch = sch_3;
                h_or_b = h_or_b3;
                index = index_3;
              }
              if (t==2) {
-               lcd_w(" ...STARTING... ","BRITISH 5MIN SEQ");
+               lcd_w(" ...STARTING... ","UK THREE MIN SEQ");
                ctdwn = ctdwn_5british;
                sch = sch_5british;
                h_or_b = h_or_b5british;
@@ -324,9 +324,9 @@ void loop(){
              t = t + 1;
              if (t>(NUM_SEQ-1)) {t= 0;}
              lcd.setCursor(0,0);              
-             if ( t == 0 ) {     lcd.print("FIVE  MIN. START      "); }
-             if ( t == 1 ) {     lcd.print("THREE MIN. START     "); }
-             if ( t == 2 ) {     lcd.print("BRITISH (5)START     "); }
+             if ( t == 0 ) {     lcd.print("US FIVE      "); }
+             if ( t == 1 ) {     lcd.print("US THREE     "); }
+             if ( t == 2 ) {     lcd.print("UK THREE     "); }
              lcd.setCursor(0,1);              
              lcd.print("                       "); 
              delay(400);
