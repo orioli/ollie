@@ -1,5 +1,5 @@
-/*************************************************************************************
 
+/*************************************************************************************
   (cc) Jose Berengueres 4-8th Feb  2015, Dubai
   (LCD sample code by Mark Bramwell, July 2010)
   
@@ -9,7 +9,6 @@
   DF ROBOT LCD PANEL, 2 x RELAY Module v3.2, 1 x Arduino 
   connect the relay of the horn to D2 of LCD shield. This relay drives aircompressor (12VDC battery)
   connect the relay that controls buzzer/beeper to D11. 
-
 **************************************************************************************/
 
 #include <LiquidCrystal.h>
@@ -21,7 +20,7 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);           // select the pins used on the LC
 int lcd_key     = 0;
 int adc_key_in  = 0;
 
-#define NUM_SEQ  3
+#define NUM_SEQ  4
 #define btnRIGHT  0
 #define btnUP     1
 #define btnDOWN   2
@@ -100,14 +99,14 @@ int index_5 = 28+6+5-1; //
 int ctdwn_5 = 5*60 + 25; // 9; //
 
 
-//************************************* FIVE BRITISH MIN SEQ ********************************
-unsigned long sch_5british[] =   {    0, 10,             20,       30, 
+//************************************* DOSC x1********************************
+unsigned long sch_5british[] =   {    0, 10,             20,       30, 40,50,
 
-                                  1*600, 1*600+10, 1*600+20, 1*600+30, 
+                                  1*600, 1*600+10, 1*600+20, 1*600+30, 1*600+40,1*600+50,
                             
-                                  4*600, 4*600+10, 4*600+20, 4*600+30, 
+                                  4*600, 4*600+10, 4*600+20, 4*600+30, 4*600+40,4*600+50, 
                           
-                                  5*600,5*600+10,5*600+20,   5*600+30  };
+                                  5*600,5*600+10,5*600+20,   5*600+30,5*600+40,5*600+50  };
 
 int h_or_b5british[] =            {  3, 0,0,0,0,0,
                                      2, 0,0,0,0,0,
@@ -115,6 +114,40 @@ int h_or_b5british[] =            {  3, 0,0,0,0,0,
                                      2, 0,0,0,0,0 };
 int index_5british = 4*6-1 ; // 
 int ctdwn_5british = 5*60 + 8; //
+
+//************************************* DOSC ROLLING x3 ********************************
+unsigned long sch__3[] =   {       0,       10,       20,       30,       40,      50,
+                                  1*600, 1*600+10, 1*600+20, 1*600+30, 1*600+40,1*600+50,
+                                  4*600, 4*600+10, 4*600+20, 4*600+30, 4*600+40,4*600+50,
+
+                                  5*600,5*600+10,5*600+20,   5*600+30,5*600+40,5*600+50, 
+                                  6*600, 6*600+10, 6*600+20, 6*600+30, 6*600+40,6*600+50,
+                                  9*600, 9*600+10, 9*600+20, 9*600+30, 9*600+40,9*600+50,
+                                  
+                                  10*600, 10*600+10, 10*600+20, 10*600+30, 10*600+40,10*600+50,
+                                  11*600, 11*600+10, 11*600+20, 11*600+30, 11*600+40,11*600+50,
+                                  14*600, 14*600+10, 14*600+20, 14*600+30, 14*600+40,14*600+50,
+                                  15*600, 15*600+10, 15*600+20, 15*600+30, 15*600+40,15*600+50
+                        };
+
+int h_or_b__3[] =            {  
+  
+                                     3, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+  
+                                     3, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+
+                                     3, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0,
+                                     2, 0,0,0,0,0 };
+int index__3 = 10*6-1 ; // 
+int ctdwn__3 = 15*60 + 7; //
+
+
 
 bool sound_on = false;
 
@@ -281,25 +314,32 @@ void loop(){
           my_start = !my_start;
           if (my_start) {
              if (t==0){
-               lcd_w(" ...STARTING... ","US FIVE MIN SEQ ");
+               lcd_w(" ...STARTING... ","DUBAI JASC 1x5 min       ");
                ctdwn = ctdwn_5 ; 
                sch = sch_5;
                h_or_b = h_or_b5;
                index = index_5;
              }
              if(t==1){
-               lcd_w(" ...STARTING... ","US THREE MIN SEQ");
+               lcd_w(" ...STARTING... ","DUBAI JASC 1x3 min     ");
                ctdwn = ctdwn_3;
                sch = sch_3;
                h_or_b = h_or_b3;
                index = index_3;
              }
              if (t==2) {
-               lcd_w(" ...STARTING... ","UK THREE MIN SEQ");
+               lcd_w(" ...STARTING... ","DOSC 1x5 min");
                ctdwn = ctdwn_5british;
                sch = sch_5british;
                h_or_b = h_or_b5british;
                index = index_5british;
+             }
+             if (t==3) {
+               lcd_w(" ...STARTING... ","DOSC ROLLING 3x5");
+               ctdwn = ctdwn__3;
+               sch = sch__3;
+               h_or_b = h_or_b__3;
+               index = index__3;
              }
              lcd.setCursor(0,1);            
              lcd.print("00:00                        ");
@@ -324,9 +364,10 @@ void loop(){
              t = t + 1;
              if (t>(NUM_SEQ-1)) {t= 0;}
              lcd.setCursor(0,0);              
-             if ( t == 0 ) {     lcd.print("US FIVE      "); }
-             if ( t == 1 ) {     lcd.print("US THREE     "); }
-             if ( t == 2 ) {     lcd.print("UK THREE     "); }
+             if ( t == 0 ) {     lcd.print("JASC 1x5min     "); }
+             if ( t == 1 ) {     lcd.print("JASC 1x3min     "); }
+             if ( t == 2 ) {     lcd.print("DOSC 1x5min     "); }
+             if ( t == 3 ) {     lcd.print("DOSC ROLLING 3x5"); }
              lcd.setCursor(0,1);              
              lcd.print("                       "); 
              delay(400);
